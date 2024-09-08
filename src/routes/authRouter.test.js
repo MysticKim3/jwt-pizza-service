@@ -1,5 +1,23 @@
 const request = require('supertest');
 const app = require('../service');
+const { DB, Role } = require('../database/database.js');
+
+// if (process.env.VSCODE_INSPECTOR_OPTIONS) {
+//     jest.setTimeout(60 * 1000 * 5); // 5 minutes
+//   }
+
+async function createAdminUser() {
+  let user = { password: 'toomanysecrets', roles: [{ role: Role.Admin }] };
+  user.name = randomName();
+  user.email = user.name + '@admin.com';
+
+  await DB.addUser(user);
+  return user;
+}
+
+function randomName() {
+    return Math.random().toString(36).substring(2, 12);
+}
 
 const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
 let testUserAuthToken;
@@ -20,12 +38,21 @@ test('login', async () => {
 });
 
 test('update', async () => {
-    //needs admin user
-    //needs userid in request
-})
+    const admin = await createAdminUser();
+    const req = {name: admin.name, email: admin.email, password: "toomanysecrets"};
+    const res = await request(app).put('/api/auth').send(req);
+    expect(res.status).toBe(200);
+    const token = res.body.token;
+    const id = res.body.user.id;
+    const req2 = {user: req, email: "random@random.com", password: "thisisanewone"};
+    const updateRes = await request(app).put(`/api/auth/${id}`).set('Authorization', `Bearer ${token}`).send(req2);
+    expect(updateRes.status).toBe(200);
+    expect(updateRes.body.email).toBe("random@random.com");
+});
+
 test('delete', async () => {
     const req = testUser;
-    const logOutRes = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`).send(req);
+    const logOutRes = await request(app).delete('/api/auth').set('Authorization', `Bearer ${testUserAuthToken}`).send(req); // this line is causing authSwitch error -- import filea fter Jest environment has been torn down -- maybe something to do with Authorization?
     expect(logOutRes.status).toBe(200);
     expect(logOutRes.body.message).toMatch('logout successful');
-})
+});
