@@ -42,8 +42,9 @@ test('list user franchises', async () => {
     expect(userFranchise.body.id).toBe(franchiseID);
 })
 
-test('create store', async () => {
-
+test('create store fail', async () => {
+    const failStoreCreate = await request(app).post(`/api/franchise/${franchiseID}/store`).send({franchiseId: franchiseID, name: "Suga"});
+    expect(failStoreCreate.status).toBe(401);
 })
 
 test('delete store', async () => {
