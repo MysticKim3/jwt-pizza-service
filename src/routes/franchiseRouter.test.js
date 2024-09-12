@@ -30,6 +30,18 @@ beforeAll(async () => {
     franchiseID = franchise.body.id;
 })
 
+test('list franchises', async () => {
+    const franchises = await request(app).get('/api/franchise');
+    expect(franchises.status).toBe(200);
+    expect(franchises.body.id).toBe(franchiseID);
+})
+
+test('list user franchises', async () => {
+    const userFranchise = await request(app).get(`/api/franchise/${adminUser.id}`).set('Authorization', `Bearer ${adminAuthToken}`);
+    expect(userFranchise.status).toBe(200);
+    expect(userFranchise.body.id).toBe(franchiseID);
+})
+
 test('create store', async () => {
 
 })
@@ -40,12 +52,4 @@ test('delete store', async () => {
 
 test('delete franchise', async () => {
 
-})
-
-test('list franchises', async () => {
-
-})
-
-test('list user franchises', async () => {
-    
 })
