@@ -47,6 +47,11 @@ test('create store fail', async () => {
     expect(failStoreCreate.status).toBe(401);
 })
 
+test('create store', async () => {
+    const storeCreate = await request(app).post(`/api/franchise/${franchiseID}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchiseID, name: "Suga"});
+    expect(storeCreate.status).toBe(500);
+})
+
 test('delete store', async () => {
 
 })
