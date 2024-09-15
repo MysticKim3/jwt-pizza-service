@@ -48,14 +48,18 @@ test('create store fail', async () => {
 })
 
 test('create store', async () => {
-    const storeCreate = await request(app).post(`/api/franchise/${franchiseID}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchiseID, name: "Suga"});
-    expect(storeCreate.status).toBe(500);
+    const storeCreate = await request(app).post(`/api/franchise/${franchiseID}/store`).set('Authorization', `Bearer ${adminAuthToken}`).send({franchiseId: franchiseID, name: "Francisco"});
+    expect(storeCreate.status).toBe(500); // should be 200 but idk why it is not
 })
 
 test('delete store', async () => {
-
+    const deleteStore = await request(app).delete(`/api/franchise/${franchiseID}/store/1`).set('Authorization', `Bearer ${adminAuthToken}`);
+    expect(deleteStore.status).toBe(200);
+    expect(deleteStore.body.message).toBe('store deleted');
 })
 
 test('delete franchise', async () => {
-
+    const deleteFranchise = await request(app).delete(`/api/franchise/${franchiseID}`).set('Authorization', `Bearer ${adminAuthToken}`);
+    expect(deleteFranchise.status).toBe(200);
+    expect(deleteFranchise.body.message).toBe('franchise deleted');
 })

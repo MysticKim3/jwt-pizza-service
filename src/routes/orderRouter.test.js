@@ -26,15 +26,23 @@ beforeAll(async () => {
     adminAuthToken = res.body.token;
 })
 
-test("empty pizza menu", async () => {
+test("get pizza menu", async () => {
     const emptyMenu = await request(app).get('/api/order/menu');
     expect(emptyMenu.status).toBe(200);
 })
 
 test("add item to menu", async () => {
-
+    const req = { title:"pizzaza", description: "Sprinkles and chocolate", image:"pizza9.png", price: 0.0001 };
+    const res = await request(app).put('/api/order/menu').set('Authorization', `Bearer ${adminAuthToken}`).send(req);
+    expect(res.status).toBe(200);
 })
 
-test("get pizza menu", async () => {
+test("create pizza order", async () => {
+    const order = {franchiseId: 1, storeId: 1, items: [{menuId: 1, description: "Veggie", price: 0.05}]};
+    const res = await request(app).post('/api/order').set('Authorization', `Bearer ${adminAuthToken}`).send(order);
+    expect (res.status).toBe(200);
+})
+
+test("get pizza orders", async () => {
 
 })
