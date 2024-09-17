@@ -48,9 +48,13 @@ test("create pizza order", async () => {
     expect(res.status).toBe(200);
 })
 
+test('get orders', async () => {
+    const order = await request(app).get('/api/order').set('Authorization', `Bearer ${adminAuthToken}`);
+    expect(order.status).toBe(200);
+})
+
 test("unauthorized add menu item", async () => {
     const req = { title:"pepizza", description: "chocolate", image:"pizza9.png", price: 0.001 };
-    const res = await request(app).post('/api/order/menu').set('Authorization', `Bearer ${testUserAuthToken}`).send(req);
+    const res = await request(app).put('/api/order/menu').set('Authorization', `Bearer ${testUserAuthToken}`).send(req);
     expect(res.status).toBe(403);
-
 })

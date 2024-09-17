@@ -40,9 +40,14 @@ test('login', async () => {
   expect(password).toBe('a');
 });
 
+test('fail login', async () => {
+    const res = await request(app).put('/api/auth').send({ name: 'pizzapizza', email: 'l@lol.com', password: 'hehe' });
+    expect(res.status).toBe(404);
+})
+
 test('update fail not authorized', async () => {
-    const res = await request(app).put(`/api/auth/${1}`).set('Authorization', `Bearer ${17398593}`).send(testUser);
-    expect(res.status).toBe(401);
+    const res = await request(app).put(`/api/auth/${1}`).set('Authorization', `Bearer ${testUserAuthToken}`).send(testUser);
+    expect(res.status).toBe(403);
 })
 
 test('update', async () => {
