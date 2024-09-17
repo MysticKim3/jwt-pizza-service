@@ -41,6 +41,12 @@ test("unauthorized create franchise", async () => {
     expect(franchise.status).toBe(403);
 })
 
+test("fail create franchise", async () => {
+    const req = {name: "pizzaJoint", "admins": [{email: testUser.email}]};
+    const franchise = await request(app).post('/api/franchise').set('Authorization', `Bearer ${'h'}`).send(req);
+    expect(franchise.status).toBe(401);
+})
+
 test('list franchises', async () => {
     const franchises = await request(app).get('/api/franchise');
     expect(franchises.status).toBe(200);

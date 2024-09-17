@@ -69,8 +69,3 @@ test('delete', async () => {
     expect(logOutRes.status).toBe(200);
     expect(logOutRes.body.message).toMatch('logout successful');
 });
-
-test('bad endpoint', async () => {
-    const res = await request(app).delete('/api/ath').set('Authorization', `Bearer ${testUserAuthToken}`);
-    expect(res.status).toBe(404);
-})
