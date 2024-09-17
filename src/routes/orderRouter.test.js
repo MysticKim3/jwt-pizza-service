@@ -17,6 +17,8 @@ function randomName() {
 
 let adminUser;
 let adminAuthToken;
+const testUser = { name: 'pizza diner', email: 'reg@test.com', password: 'a' };
+let testUserAuthToken;
 
 beforeAll(async () => {
     adminUser = await createAdminUser();
@@ -24,6 +26,9 @@ beforeAll(async () => {
     const res = await request(app).put('/api/auth').send(req);
     expect(res.status).toBe(200);
     adminAuthToken = res.body.token;
+    testUser.email = Math.random().toString(36).substring(2, 12) + '@test.com';
+    const registerRes = await request(app).post('/api/auth').send(testUser);
+    testUserAuthToken = registerRes.body.token;
 })
 
 test("get pizza menu", async () => {
@@ -40,9 +45,12 @@ test("add item to menu", async () => {
 test("create pizza order", async () => {
     const order = {franchiseId: 1, storeId: 1, items: [{menuId: 1, description: "Veggie", price: 0.05}]};
     const res = await request(app).post('/api/order').set('Authorization', `Bearer ${adminAuthToken}`).send(order);
-    expect (res.status).toBe(200);
+    expect(res.status).toBe(200);
 })
 
-test("get pizza orders", async () => {
+test("unauthorized add menu item", async () => {
+    const req = { title:"pepizza", description: "chocolate", image:"pizza9.png", price: 0.001 };
+    const res = await request(app).post('/api/order/menu').set('Authorization', `Bearer ${testUserAuthToken}`).send(req);
+    expect(res.status).toBe(403);
 
 })

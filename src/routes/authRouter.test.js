@@ -25,6 +25,11 @@ beforeAll(async () => {
   testUserAuthToken = registerRes.body.token;
 });
 
+test('register without password', async () => {
+    const res = await request(app).post('/api/auth').send({ name: 'pizza diner', email: 'reg@test.com'});
+    expect(res.status).toBe(400);
+});
+
 test('login', async () => {
   const loginRes = await request(app).put('/api/auth').send(testUser);
   expect(loginRes.status).toBe(200);
@@ -34,6 +39,11 @@ test('login', async () => {
   expect(loginRes.body.user).toMatchObject(user);
   expect(password).toBe('a');
 });
+
+test('update fail not authorized', async () => {
+    const res = await request(app).put(`/api/auth/${1}`).set('Authorization', `Bearer ${17398593}`).send(testUser);
+    expect(res.status).toBe(401);
+})
 
 test('update', async () => {
     const admin = await createAdminUser();
