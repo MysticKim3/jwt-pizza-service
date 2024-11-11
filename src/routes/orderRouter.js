@@ -3,6 +3,7 @@ const config = require('../config.js');
 const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
+const metrics = require('../metrics');
 
 const orderRouter = express.Router();
 
@@ -45,6 +46,7 @@ orderRouter.get(
   '/menu',
   asyncHandler(async (req, res) => {
     res.send(await DB.getMenu());
+    metrics.incrementRequests("get");
   })
 );
 
@@ -59,6 +61,7 @@ orderRouter.put(
 
     const addMenuItemReq = req.body;
     await DB.addMenuItem(addMenuItemReq);
+    metrics.incrementRequests("put");
     res.send(await DB.getMenu());
   })
 );
@@ -69,6 +72,7 @@ orderRouter.get(
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
     res.json(await DB.getOrders(req.user, req.query.page));
+    metrics.incrementRequests("get");
   })
 );
 
@@ -85,6 +89,7 @@ orderRouter.post(
       body: JSON.stringify({ diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order }),
     });
     const j = await r.json();
+    metrics.incrementRequests("post");
     if (r.ok) {
       res.send({ order, jwt: j.jwt, reportUrl: j.reportUrl });
     } else {
