@@ -10,6 +10,11 @@ class Metrics {
     this.getRequests = 0;
     this.deleteRequests = 0;
 
+    this.activeUser = 0;
+
+    this.authSuccess = 0;
+    this.authFailure = 0;
+
     // This will periodically sent metrics to Grafana
     const timer = setInterval(() => {
       this.sendMetricToGrafana('request', 'all', 'total', this.totalRequests);
@@ -17,8 +22,30 @@ class Metrics {
       this.sendMetricToGrafana('request', 'get', 'total', this.getRequests);
       this.sendMetricToGrafana('request', 'post', 'total', this.postRequests);
       this.sendMetricToGrafana('request', 'delete', 'total', this.deleteRequests);
+
+      this.sendMetricToGrafana('active_user', 'users', 'total', this.activeUser);
+
+      this.sendMetricToGrafana('auth', 'success', 'total', this.authSuccess);
+      this.sendMetricToGrafana('auth', 'failure', 'total', this.authFailure);
     }, 10000);
     timer.unref();
+  }
+
+  authentications(req) {
+    if (req == "success") {
+        this.authSuccess++;
+    } else if (req == "failure") {
+        this.authFailure++;
+    }
+  }
+
+  activeUsers(req) {
+    if (req == "add") {
+        this.activeUser++;
+    } else if (req == "delete") {
+        this.activeUser--;
+    }
+
   }
 
   incrementRequests(req) {

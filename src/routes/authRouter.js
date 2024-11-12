@@ -59,8 +59,10 @@ async function setAuthUser(req, res, next) {
 // Authenticate token
 authRouter.authenticateToken = (req, res, next) => {
   if (!req.user) {
+    metrics.authentications("failure");
     return res.status(401).send({ message: 'unauthorized' });
   }
+  metrics.authentications("success");
   next();
 };
 
@@ -70,11 +72,13 @@ authRouter.post(
   asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
+      metrics.authentications("failure");
       return res.status(400).json({ message: 'name, email, and password are required' });
     }
     const user = await DB.addUser({ name, email, password, roles: [{ role: Role.Diner }] });
     const auth = await setAuth(user);
     metrics.incrementRequests("post");
+    metrics.activeUsers("add");
     res.json({ user: user, token: auth });
   })
 );
@@ -87,6 +91,7 @@ authRouter.put(
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
     metrics.incrementRequests("put");
+    metrics.activeUsers("add");
     res.json({ user: user, token: auth });
   })
 );
@@ -98,6 +103,7 @@ authRouter.delete(
   asyncHandler(async (req, res) => {
     clearAuth(req);
     metrics.incrementRequests("delete");
+    metrics.activeUsers("delete");
     res.json({ message: 'logout successful' });
   })
 );
@@ -123,6 +129,11 @@ authRouter.put(
 async function setAuth(user) {
   const token = jwt.sign(user, config.jwtSecret);
   await DB.loginUser(user.id, token);
+  if (token) {
+    metrics.authentications("success");
+  } else {
+    metrics.authentications("failure");
+  }
   return token;
 }
 
