@@ -15,6 +15,15 @@ class Metrics {
     this.authSuccess = 0;
     this.authFailure = 0;
 
+    this.pizzaSold = 0;
+    this.pizzaFail = 0;
+    this.revenue = 0;
+
+    this.pizzaLatency = 0;
+    this.pizzaCount = 0;
+    this.serviceLatency = 0;
+    this.serviceCount = 0;
+
     // This will periodically sent metrics to Grafana
     const timer = setInterval(() => {
       this.sendMetricToGrafana('request', 'all', 'total', this.totalRequests);
@@ -27,8 +36,39 @@ class Metrics {
 
       this.sendMetricToGrafana('auth', 'success', 'total', this.authSuccess);
       this.sendMetricToGrafana('auth', 'failure', 'total', this.authFailure);
+
+      let cpu = getCpuUsagePercentage();
+      this.sendMetricToGrafana('cpu', 'cpu', 'percent', cpu);
+      let mem = getMemoryUsagePercentage();
+      this.sendMetricToGrafana('memory', 'mem', 'percent', mem);
+
+      this.sendMetricToGrafana('pizza', 'pass', 'total', this.pizzaSold);
+      this.sendMetricToGrafana('pizza', 'fail', 'total', this.pizzaFail);
+      this.sendMetricToGrafana('revenue', 'rev', 'total', this.revenue);
+
+      this.sendMetricToGrafana('latency', 'pizza', 'total', this.pizzaLatency / this.pizzaCount);
+      this.sendMetricToGrafana('latency', 'service', 'total', this.serviceLatency / this.serviceCount);
+      
     }, 10000);
     timer.unref();
+  }
+
+  latency(req, start, end) {
+    this.serviceLatency += (end - start);
+    this.serviceCount++;
+    if (req == "pizza") {
+        this.pizzaCount++;
+        this.pizzaLatency += (end - start);
+    }
+  }
+
+  pizzabuys(req, money) {
+    if (req == "fail") {
+        this.pizzaFail++;
+    } else if (req == "sold") {
+        this.pizzaSold++;
+        this.revenue += money.items[0].price;
+    }
   }
 
   authentications(req) {
@@ -100,23 +140,23 @@ function getMemoryUsagePercentage() {
   return memoryUsage.toFixed(2);
 }
 
-function sendMetricsPeriodically(period) {
-    const timer = setInterval(() => {
-      try {
-        const buf = new MetricBuilder();
-        httpMetrics(buf);
-        systemMetrics(buf);
-        userMetrics(buf);
-        purchaseMetrics(buf);
-        authMetrics(buf);
+// function sendMetricsPeriodically(period) {
+//     const timer = setInterval(() => {
+//       try {
+//         const buf = new MetricBuilder();
+//         httpMetrics(buf);
+//         systemMetrics(buf);
+//         userMetrics(buf);
+//         purchaseMetrics(buf);
+//         authMetrics(buf);
   
-        const metrics = buf.toString('\n');
-        this.sendMetricToGrafana(metrics);
-      } catch (error) {
-        console.log('Error sending metrics', error);
-      }
-    }, period);
-}
+//         const metrics = buf.toString('\n');
+//         this.sendMetricToGrafana(metrics);
+//       } catch (error) {
+//         console.log('Error sending metrics', error);
+//       }
+//     }, period);
+// }
 
 const metrics = new Metrics();
 module.exports = metrics;

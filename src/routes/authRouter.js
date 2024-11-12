@@ -70,6 +70,7 @@ authRouter.authenticateToken = (req, res, next) => {
 authRouter.post(
   '/',
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     const { name, email, password } = req.body;
     if (!name || !email || !password) {
       metrics.authentications("failure");
@@ -79,6 +80,8 @@ authRouter.post(
     const auth = await setAuth(user);
     metrics.incrementRequests("post");
     metrics.activeUsers("add");
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("a", metricsStartTimer, metricsEndTimer);
     res.json({ user: user, token: auth });
   })
 );
@@ -87,11 +90,14 @@ authRouter.post(
 authRouter.put(
   '/',
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     const { email, password } = req.body;
     const user = await DB.getUser(email, password);
     const auth = await setAuth(user);
     metrics.incrementRequests("put");
     metrics.activeUsers("add");
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("a", metricsStartTimer, metricsEndTimer);
     res.json({ user: user, token: auth });
   })
 );
@@ -101,9 +107,12 @@ authRouter.delete(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     clearAuth(req);
     metrics.incrementRequests("delete");
     metrics.activeUsers("delete");
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("a", metricsStartTimer, metricsEndTimer);
     res.json({ message: 'logout successful' });
   })
 );
@@ -113,6 +122,7 @@ authRouter.put(
   '/:userId',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     const { email, password } = req.body;
     const userId = Number(req.params.userId);
     const user = req.user;
@@ -122,6 +132,8 @@ authRouter.put(
 
     const updatedUser = await DB.updateUser(userId, email, password);
     metrics.incrementRequests("put");
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("a", metricsStartTimer, metricsEndTimer);
     res.json(updatedUser);
   })
 );

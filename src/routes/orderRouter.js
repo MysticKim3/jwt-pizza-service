@@ -45,8 +45,11 @@ orderRouter.endpoints = [
 orderRouter.get(
   '/menu',
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     res.send(await DB.getMenu());
     metrics.incrementRequests("get");
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("a", metricsStartTimer, metricsEndTimer);
   })
 );
 
@@ -55,6 +58,7 @@ orderRouter.put(
   '/menu',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     if (!req.user.isRole(Role.Admin)) {
       throw new StatusCodeError('unable to add menu item', 403);
     }
@@ -63,6 +67,8 @@ orderRouter.put(
     await DB.addMenuItem(addMenuItemReq);
     metrics.incrementRequests("put");
     res.send(await DB.getMenu());
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("a", metricsStartTimer, metricsEndTimer);
   })
 );
 
@@ -71,8 +77,11 @@ orderRouter.get(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     res.json(await DB.getOrders(req.user, req.query.page));
     metrics.incrementRequests("get");
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("a", metricsStartTimer, metricsEndTimer);
   })
 );
 
@@ -81,6 +90,7 @@ orderRouter.post(
   '/',
   authRouter.authenticateToken,
   asyncHandler(async (req, res) => {
+    let metricsStartTimer = new Date().getTime();
     const orderReq = req.body;
     const order = await DB.addDinerOrder(req.user, orderReq);
     const r = await fetch(`${config.factory.url}/api/order`, {
@@ -91,10 +101,14 @@ orderRouter.post(
     const j = await r.json();
     metrics.incrementRequests("post");
     if (r.ok) {
+      metrics.pizzabuys("sold", order);
       res.send({ order, jwt: j.jwt, reportUrl: j.reportUrl });
     } else {
+      metrics.pizzabuys("fail", 0);
       res.status(500).send({ message: 'Failed to fulfill order at factory', reportUrl: j.reportUrl });
     }
+    let metricsEndTimer = new Date().getTime();
+    metrics.latency("pizza", metricsStartTimer, metricsEndTimer);
   })
 );
 
