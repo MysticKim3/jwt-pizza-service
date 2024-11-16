@@ -3,8 +3,14 @@ const { DB, Role } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { StatusCodeError, asyncHandler } = require('../endpointHelper.js');
 const metrics = require('../metrics');
+const logger = require('../logger.js');
 
 const franchiseRouter = express.Router();
+franchiseRouter.use(logger.httpLogger);
+process.on('uncaughtException', function(err) {
+    logger.log('error', 'json', err);
+})
+
 
 franchiseRouter.endpoints = [
   {

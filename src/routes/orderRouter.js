@@ -4,8 +4,14 @@ const { Role, DB } = require('../database/database.js');
 const { authRouter } = require('./authRouter.js');
 const { asyncHandler, StatusCodeError } = require('../endpointHelper.js');
 const metrics = require('../metrics');
+const logger = require('../logger.js');
 
 const orderRouter = express.Router();
+orderRouter.use(logger.httpLogger);
+
+process.on('uncaughtException', function(err) {
+    logger.log('error', 'json', err);
+})
 
 orderRouter.endpoints = [
   {
@@ -99,6 +105,7 @@ orderRouter.post(
       body: JSON.stringify({ diner: { id: req.user.id, name: req.user.name, email: req.user.email }, order }),
     });
     const j = await r.json();
+    logger.log('info', 'json', j);
     metrics.incrementRequests("post");
     if (r.ok) {
       metrics.pizzabuys("sold", order);
